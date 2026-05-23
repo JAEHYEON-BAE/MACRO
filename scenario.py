@@ -18,6 +18,8 @@ SCENE_NETWORK_ERROR       = "images/network_error.png"
 SCENE_INTRO_POPUP         = "images/intro_popup.png"
 SCENE_NOTICE_POPUP        = "images/notice_popup.png"
 SCENE_FORTUNE_COOKIE      = "images/fortune_cookie.png"
+SCENE_LEVELUP             = "images/levelup.png"
+SCENE_ATTENDANCE          = "images/attendance.png"
 
 
 @dataclass
@@ -112,6 +114,18 @@ def _handle_fortune_cookie(device: ADBDevice) -> None:
     device.tap(2180 + dx, 340 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_levelup(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: level up")
+    dx, dy = _jitter()
+    device.tap(1280 + dx, 1270 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
+def _handle_attendance(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: attendance check")
+    dx, dy = _jitter()
+    device.tap(1280 + dx, 1300 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
 SCENES: list[SceneDef] = [
@@ -121,6 +135,20 @@ SCENES: list[SceneDef] = [
             (0.3, 0.7, 0.25, 0.75), 
         ],
         handler=_handle_network_error,
+    ),
+    SceneDef(
+        image=SCENE_LEVELUP,
+        regions=[
+            (0, 0.2, 0.2, 0.8), 
+        ],
+        handler=_handle_levelup
+    ),
+    SceneDef(
+        image=SCENE_ATTENDANCE,
+        regions=[
+            (0.05, 0.11, 0.2, 0.8), 
+        ],
+        handler=_handle_attendance
     ),
     SceneDef(
         image=SCENE_INTRO_POPUP,
