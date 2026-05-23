@@ -15,6 +15,9 @@ SCENE_POPUP               = "images/popup.png"
 SCENE_MAILBOX             = "images/mailbox.png"
 SCENE_FRIEND_INFO         = "images/friend_info.png"
 SCENE_SEND_HEART          = "images/send_heart.png"
+SCENE_NETWORK_ERROR       = "images/network_error.png"
+SCENE_INTRO_POPUP         = "images/intro_popup.png"
+SCENE_NOTICE_POPUP        = "images/notice_popup.png"
 
 
 @dataclass
@@ -23,7 +26,7 @@ class SceneDef:
     # 매칭할 영역 목록: (y0, y1, x0, x1) 비율. 모두 일치해야 감지.
     regions: list[tuple[float, float, float, float]]
     handler: Callable[["ADBDevice"], None]
-    threshold: float = 0.8
+    threshold: float = 0.9
     template_gray: np.ndarray | None = field(default=None, repr=False)
 
 
@@ -93,9 +96,48 @@ def _handle_send_heart(device: ADBDevice) -> None:
     device.tap(975 + dx, 916 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_network_error(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: network error")
+    dx, dy = _jitter()
+    device.tap(1280 + dx, 920 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
+def _handle_intro_popup(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: intro popup")
+    dx, dy = _jitter()
+    device.tap(2250 + dx, 110 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+    
+def _handle_notice_popup(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: notice popup")
+    dx, dy = _jitter()
+    device.tap(2250 + dx, 150 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
 SCENES: list[SceneDef] = [
+    SceneDef(
+        image=SCENE_NETWORK_ERROR,
+        regions=[
+            (0.3, 0.7, 0.25, 0.75), 
+        ],
+        handler=_handle_network_error,
+    ),
+    SceneDef(
+        image=SCENE_INTRO_POPUP,
+        regions=[
+            (0.04, 0.13, 0.85, 0.9),
+        ],
+        handler=_handle_intro_popup,
+    ),
+    SceneDef(
+        image=SCENE_NOTICE_POPUP,
+        regions=[
+            (0.04, 0.13, 0.85, 0.9),
+        ],
+        handler=_handle_notice_popup,
+    ),
     SceneDef(
         image=SCENE_POPUP,
         regions=[
@@ -110,6 +152,27 @@ SCENES: list[SceneDef] = [
             (0.8, 1.0, 0.0, 1.0),   # 하단 "확인", "자랑하기"
         ],
         handler=_handle_result,
+    ),
+    SceneDef(
+        image=SCENE_MAILBOX,
+        regions=[
+            (0.08, 0.15, 0.4, 0.9),  # 상단 "메일박스", "x" 버튼
+        ],
+        handler=_handle_mailbox,
+    ),
+    SceneDef(
+        image=SCENE_FRIEND_INFO,
+        regions=[
+            (0.08, 0.15, 0.4, 0.88),  # 상단 "친구정보", "x" 버튼
+        ],
+        handler=_handle_friend_info,
+    ),
+    SceneDef(
+        image=SCENE_SEND_HEART,
+        regions=[
+            (0.55, 0.7, 0.3, 0.7),  
+        ],
+        handler=_handle_send_heart,
     ),
     SceneDef(
         image=SCENE_MYSTERY_BOX_BEFORE,
@@ -133,31 +196,6 @@ SCENES: list[SceneDef] = [
             (0.71, 0.95, 0.6, 0.9),  # 우측 하단 "게임시작" 버튼
         ],
         handler=_handle_lobby,
-        threshold=0.8,
-    ),
-    SceneDef(
-        image=SCENE_MAILBOX,
-        regions=[
-            (0.08, 0.15, 0.4, 0.9),  # 상단 "메일박스", "x" 버튼
-        ],
-        handler=_handle_mailbox,
-        threshold=0.8,
-    ),
-    SceneDef(
-        image=SCENE_FRIEND_INFO,
-        regions=[
-            (0.08, 0.15, 0.4, 0.88),  # 상단 "친구정보", "x" 버튼
-        ],
-        handler=_handle_friend_info,
-        threshold=0.8,
-    ),
-    SceneDef(
-        image=SCENE_SEND_HEART,
-        regions=[
-            (0.55, 0.7, 0.3, 0.7),  # 상단 "친구정보", "x" 버튼
-        ],
-        handler=_handle_send_heart,
-        threshold=0.8,
     ),
 ]
 
