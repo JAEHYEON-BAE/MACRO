@@ -14,6 +14,7 @@ SCENE_LOBBY               = "images/lobby.png"
 SCENE_POPUP               = "images/popup.png"
 SCENE_MAILBOX             = "images/mailbox.png"
 SCENE_FRIEND_INFO         = "images/friend_info.png"
+SCENE_SEND_HEART          = "images/send_heart.png"
 
 
 @dataclass
@@ -43,18 +44,21 @@ def _handle_result(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: result")
     dx, dy = _jitter()
     device.tap(1000 + dx, 1200 + dy)
+    time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
 
 
 def _handle_mystery_box_before(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: mystery box (before open)")
     dx, dy = _jitter()
     device.tap(1300 + dx, 1300 + dy)
+    time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
 
 
 def _handle_mystery_box_after(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: mystery box (after open)")
     dx, dy = _jitter()
     device.tap(1300 + dx, 1300 + dy)
+    time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
 
 
 def _handle_lobby(device: ADBDevice) -> None:
@@ -62,24 +66,32 @@ def _handle_lobby(device: ADBDevice) -> None:
     for _ in range(5):
         dx, dy = _jitter()
         device.tap(1800 + dx, 1250 + dy)
-        time.sleep(random.gauss(0.3, 0.1))
+        time.sleep(np.clip(random.gauss(0.3, 0.1), 0, 1))
 
 
 def _handle_popup(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: popup")
     dx, dy = _jitter()
     device.tap(1275 + dx, 1125 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
 def _handle_mailbox(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: mailbox")
     dx, dy = _jitter()
     device.tap(2260 + dx, 177 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
 def _handle_friend_info(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: friend info")
     dx, dy = _jitter()
     device.tap(2180 + dx, 148 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_send_heart(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: send heart")
+    dx, dy = _jitter()
+    device.tap(975 + dx, 916 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
@@ -137,6 +149,14 @@ SCENES: list[SceneDef] = [
             (0.08, 0.15, 0.4, 0.88),  # 상단 "친구정보", "x" 버튼
         ],
         handler=_handle_friend_info,
+        threshold=0.8,
+    ),
+    SceneDef(
+        image=SCENE_SEND_HEART,
+        regions=[
+            (0.55, 0.7, 0.3, 0.7),  # 상단 "친구정보", "x" 버튼
+        ],
+        handler=_handle_send_heart,
         threshold=0.8,
     ),
 ]

@@ -12,7 +12,7 @@ class ADBDevice:
         self.name = name
 
     def screenshot(self) -> np.ndarray:
-        """Raw RGBA screencap — PNG 인코딩/디코딩 없이 픽셀 데이터를 직접 수신한다."""
+        """Raw RGBA screencap — PNG 인코딩/디코딩 없이 픽셀 데이터를 직접 수신"""
         result = subprocess.run(
             ["adb", "-s", self.device_id, "exec-out", "screencap"],
             capture_output=True,
@@ -76,7 +76,7 @@ class ADBDevice:
         threshold: float = 0.8,
     ) -> bool:
         """
-        그레이스케일 screen/template으로 region 매칭을 수행한다.
+        그레이스케일 screen/template으로 region 매칭
         루프에서 스크린샷과 cvtColor를 한 번만 하고 여러 씬에 재사용할 때 사용.
         regions: (y0, y1, x0, x1) 비율 목록. 모두 일치해야 True.
         """
