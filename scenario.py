@@ -8,8 +8,7 @@ from device import ADBDevice
 
 
 SCENE_RESULT              = "images/result.png"
-SCENE_MYSTERY_BOX_BEFORE  = "images/misterybox_before_open.png"
-SCENE_MYSTERY_BOX_AFTER   = "images/misterybox_after_open.png"
+SCENE_MYSTERY_BOX         = "images/misterybox.png"
 SCENE_LOBBY               = "images/lobby.png"
 SCENE_POPUP               = "images/popup.png"
 SCENE_MAILBOX             = "images/mailbox.png"
@@ -18,6 +17,7 @@ SCENE_SEND_HEART          = "images/send_heart.png"
 SCENE_NETWORK_ERROR       = "images/network_error.png"
 SCENE_INTRO_POPUP         = "images/intro_popup.png"
 SCENE_NOTICE_POPUP        = "images/notice_popup.png"
+SCENE_FORTUNE_COOKIE      = "images/fortune_cookie.png"
 
 
 @dataclass
@@ -50,19 +50,11 @@ def _handle_result(device: ADBDevice) -> None:
     time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
 
 
-def _handle_mystery_box_before(device: ADBDevice) -> None:
-    print(f"[{device.name}] scene: mystery box (before open)")
+def _handle_mystery_box(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: mystery box")
     dx, dy = _jitter()
     device.tap(1300 + dx, 1300 + dy)
     time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
-
-
-def _handle_mystery_box_after(device: ADBDevice) -> None:
-    print(f"[{device.name}] scene: mystery box (after open)")
-    dx, dy = _jitter()
-    device.tap(1300 + dx, 1300 + dy)
-    time.sleep(np.clip(random.gauss(0.2, 0.05), 0, 1))
-
 
 def _handle_lobby(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: lobby")
@@ -114,6 +106,12 @@ def _handle_notice_popup(device: ADBDevice) -> None:
     device.tap(2250 + dx, 150 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_fortune_cookie(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: fortune cookie")
+    dx, dy = _jitter()
+    device.tap(2180 + dx, 340 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
 SCENES: list[SceneDef] = [
@@ -146,6 +144,13 @@ SCENES: list[SceneDef] = [
         handler=_handle_popup,
     ),
     SceneDef(
+        image=SCENE_FORTUNE_COOKIE,
+        regions=[
+            (0.15, 0.3, 0.15, 0.85),  
+        ],
+        handler=_handle_fortune_cookie,
+    ),
+    SceneDef(
         image=SCENE_RESULT,
         regions=[
             (0.0, 0.15, 0.0, 1.0),   # 상단 "게임결과"
@@ -175,20 +180,11 @@ SCENES: list[SceneDef] = [
         handler=_handle_send_heart,
     ),
     SceneDef(
-        image=SCENE_MYSTERY_BOX_BEFORE,
+        image=SCENE_MYSTERY_BOX,
         regions=[
             (0.0, 0.15, 0.3, 0.7),   # 상단 "미스터리박스 오픈"
-            (0.85, 0.98, 0.3, 0.7),   # 하단 "모두 열기"
         ],
-        handler=_handle_mystery_box_before,
-    ),
-    SceneDef(
-        image=SCENE_MYSTERY_BOX_AFTER,
-        regions=[
-            (0.0, 0.15, 0.3, 0.7),   # 상단 "미스터리박스 오픈"
-            (0.85, 0.98, 0.3, 0.7),   # 하단 "확인"
-        ],
-        handler=_handle_mystery_box_after,
+        handler=_handle_mystery_box,
     ),
     SceneDef(
         image=SCENE_LOBBY,
