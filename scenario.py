@@ -252,7 +252,7 @@ SCENES: list[SceneDef] = [
     SceneDef(
         image=SCENE_PARTYRUN,
         regions=[
-            (0, 0.3, 0, 1),  # 우측 하단 "게임시작" 버튼
+            (0, 0.3, 0, 1), 
         ],
         handler=_handle_partyrun,
     ),
