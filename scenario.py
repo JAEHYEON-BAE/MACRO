@@ -11,10 +11,12 @@ SCENE_RESULT              = "images/result.png"
 SCENE_MYSTERY_BOX         = "images/misterybox.png"
 SCENE_LOBBY               = "images/lobby.png"
 SCENE_POPUP               = "images/popup.png"
+SCENE_RESULT_POPUP        = "images/result_popup.png"
 SCENE_MAILBOX             = "images/mailbox.png"
 SCENE_FRIEND_INFO         = "images/friend_info.png"
 SCENE_SEND_HEART          = "images/send_heart.png"
-SCENE_NETWORK_ERROR       = "images/network_error.png"
+SCENE_NETWORK_ERROR_1     = "images/network_error_1.png"
+SCENE_NETWORK_ERROR_2     = "images/network_error_2.png"
 SCENE_INTRO_POPUP         = "images/intro_popup.png"
 SCENE_NOTICE_POPUP        = "images/notice_popup.png"
 SCENE_FORTUNE_COOKIE      = "images/fortune_cookie.png"
@@ -126,15 +128,35 @@ def _handle_attendance(device: ADBDevice) -> None:
     device.tap(1280 + dx, 1300 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_result_popup(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: unseen result popup")
+    dx, dy = _jitter()
+    device.tap(1270 + dx, 900 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
 SCENES: list[SceneDef] = [
     SceneDef(
-        image=SCENE_NETWORK_ERROR,
+        image=SCENE_NETWORK_ERROR_1,
         regions=[
             (0.3, 0.7, 0.25, 0.75), 
         ],
         handler=_handle_network_error,
+    ),
+    SceneDef(
+        image=SCENE_NETWORK_ERROR_2,
+        regions=[
+            (0.3, 0.7, 0.25, 0.75), 
+        ],
+        handler=_handle_network_error,
+    ),
+    SceneDef(
+        image=SCENE_RESULT_POPUP,
+        regions=[
+            (0.3, 0.7, 0.25, 0.75), 
+        ],
+        handler=_handle_result_popup,
     ),
     SceneDef(
         image=SCENE_LEVELUP,
@@ -182,7 +204,6 @@ SCENES: list[SceneDef] = [
         image=SCENE_RESULT,
         regions=[
             (0.0, 0.15, 0.0, 1.0),   # 상단 "게임결과"
-            (0.8, 1.0, 0.0, 1.0),   # 하단 "확인", "자랑하기"
         ],
         handler=_handle_result,
     ),
@@ -229,10 +250,14 @@ def run_scenario_loop(device: ADBDevice, poll_interval: float = 1.0) -> None:
     load_templates()
     while device.is_connected():
         screen_gray = cv2.cvtColor(device.screenshot(), cv2.COLOR_BGR2GRAY)
+        best_score, best_scene = -1.0, None
         for scene in SCENES:
-            if device.match_regions(screen_gray, scene.template_gray, scene.regions, scene.threshold):
-                scene.handler(device)
-                break
+            score = device.score_regions(screen_gray, scene.template_gray, scene.regions, scene.threshold)
+            if score > best_score:
+                best_score, best_scene = score, scene
+        if best_scene:
+            print(f"[{device.name}] best match: {best_scene.image} (score={best_score:.4f})")
+            best_scene.handler(device)
         else:
             time.sleep(poll_interval)
     print(f"[{device.name}] 디바이스 연결 끊김 — 루프 종료")

@@ -68,17 +68,16 @@ class ADBDevice:
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val >= threshold
 
-    def match_regions(
+    def score_regions(
         self,
         screen_gray: np.ndarray,
         template_gray: np.ndarray,
         regions: list[tuple[float, float, float, float]],
         threshold: float = 0.8,
-    ) -> bool:
+    ) -> float:
         """
-        그레이스케일 screen/template으로 region 매칭
-        루프에서 스크린샷과 cvtColor를 한 번만 하고 여러 씬에 재사용할 때 사용.
-        regions: (y0, y1, x0, x1) 비율 목록. 모두 일치해야 True.
+        모든 region이 threshold를 통과하면 그 중 최솟값을 반환, 하나라도 실패하면 -1.0.
+        regions: (y0, y1, x0, x1) 비율 목록.
         """
         scale = screen_gray.shape[1] / template_gray.shape[1]
         if abs(scale - 1.0) > 0.01:
@@ -87,13 +86,24 @@ class ADBDevice:
             template_gray = cv2.resize(template_gray, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
         h, w = template_gray.shape[:2]
+        min_score = 1.0
         for y0, y1, x0, x1 in regions:
             strip = template_gray[int(h * y0):int(h * y1), int(w * x0):int(w * x1)]
             result = cv2.matchTemplate(screen_gray, strip, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
             if max_val < threshold:
-                return False
-        return True
+                return -1.0
+            min_score = min(min_score, max_val)
+        return min_score
+
+    def match_regions(
+        self,
+        screen_gray: np.ndarray,
+        template_gray: np.ndarray,
+        regions: list[tuple[float, float, float, float]],
+        threshold: float = 0.8,
+    ) -> bool:
+        return self.score_regions(screen_gray, template_gray, regions, threshold) >= 0
 
     def find_screen_regions(
         self,
