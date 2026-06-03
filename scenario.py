@@ -23,6 +23,7 @@ SCENE_FORTUNE_COOKIE      = "images/fortune_cookie.png"
 SCENE_LEVELUP             = "images/levelup.png"
 SCENE_ATTENDANCE          = "images/attendance.png"
 SCENE_PARTYRUN            = "images/partyrun.png"
+SCENE_HOME                = "images/home.png"
 
 
 @dataclass
@@ -141,6 +142,12 @@ def _handle_partyrun(device: ADBDevice) -> None:
     device.tap(2420 + dx, 180 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
+def _handle_home(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: home page")
+    dx, dy = _jitter()
+    device.tap(1080 + dx, 390 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
 # 화면 → 영역 + 핸들러 매핑. 순서 = 우선순위.
 # regions: (y0, y1, x0, x1) 비율 — 이미지 전체 크기 기준.
 SCENES: list[SceneDef] = [
@@ -255,6 +262,13 @@ SCENES: list[SceneDef] = [
             (0, 0.3, 0, 1), 
         ],
         handler=_handle_partyrun,
+    ),
+    SceneDef(
+        image=SCENE_HOME,
+        regions=[
+            (0.2, 0.35, 0.35, 0.45), 
+        ],
+        handler=_handle_home,
     ),
 ]
 
