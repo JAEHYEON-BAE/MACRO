@@ -70,26 +70,27 @@ class ADBDevice:
 
     def score_regions(
         self,
-        screen_gray: np.ndarray,
-        template_gray: np.ndarray,
+        screen: np.ndarray,
+        template: np.ndarray,
         regions: list[tuple[float, float, float, float]],
         threshold: float = 0.8,
     ) -> float:
         """
         모든 region이 threshold를 통과하면 그 중 최솟값을 반환, 하나라도 실패하면 -1.0.
+        screen/template은 같은 채널 수(둘 다 BGR 또는 둘 다 grayscale)여야 한다.
         regions: (y0, y1, x0, x1) 비율 목록.
         """
-        scale = screen_gray.shape[1] / template_gray.shape[1]
+        scale = screen.shape[1] / template.shape[1]
         if abs(scale - 1.0) > 0.01:
-            new_w = int(template_gray.shape[1] * scale)
-            new_h = int(template_gray.shape[0] * scale)
-            template_gray = cv2.resize(template_gray, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+            new_w = int(template.shape[1] * scale)
+            new_h = int(template.shape[0] * scale)
+            template = cv2.resize(template, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
-        h, w = template_gray.shape[:2]
+        h, w = template.shape[:2]
         min_score = 1.0
         for y0, y1, x0, x1 in regions:
-            strip = template_gray[int(h * y0):int(h * y1), int(w * x0):int(w * x1)]
-            result = cv2.matchTemplate(screen_gray, strip, cv2.TM_CCOEFF_NORMED)
+            strip = template[int(h * y0):int(h * y1), int(w * x0):int(w * x1)]
+            result = cv2.matchTemplate(screen, strip, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
             if max_val < threshold:
                 return -1.0
@@ -98,12 +99,12 @@ class ADBDevice:
 
     def match_regions(
         self,
-        screen_gray: np.ndarray,
-        template_gray: np.ndarray,
+        screen: np.ndarray,
+        template: np.ndarray,
         regions: list[tuple[float, float, float, float]],
         threshold: float = 0.8,
     ) -> bool:
-        return self.score_regions(screen_gray, template_gray, regions, threshold) >= 0
+        return self.score_regions(screen, template, regions, threshold) >= 0
 
     def find_screen_regions(
         self,

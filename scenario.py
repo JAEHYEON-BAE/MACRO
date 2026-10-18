@@ -19,6 +19,7 @@ SCENE_NETWORK_ERROR_1     = "images/network_error_1.png"
 SCENE_NETWORK_ERROR_2     = "images/network_error_2.png"
 SCENE_INTRO_POPUP         = "images/intro_popup.png"
 SCENE_NOTICE_POPUP        = "images/notice_popup.png"
+SCENE_EVENT_POPUP         = "images/event_popup.png"
 SCENE_FORTUNE_COOKIE      = "images/fortune_cookie.png"
 SCENE_LEVELUP             = "images/levelup.png"
 SCENE_ATTENDANCE          = "images/attendance.png"
@@ -33,7 +34,7 @@ class SceneDef:
     regions: list[tuple[float, float, float, float]]
     handler: Callable[["ADBDevice"], None]
     threshold: float = 0.9
-    template_gray: np.ndarray | None = field(default=None, repr=False)
+    template: np.ndarray | None = field(default=None, repr=False)
 
 
 def load_templates() -> None:
@@ -42,7 +43,7 @@ def load_templates() -> None:
         t = cv2.imread(scene.image, cv2.IMREAD_GRAYSCALE)
         if t is None:
             raise FileNotFoundError(f"템플릿 이미지를 찾을 수 없습니다: {scene.image}")
-        scene.template_gray = t
+        scene.template = t
 
 
 def _jitter(sigma: float = 6.0) -> tuple[float, float]:
@@ -97,7 +98,7 @@ def _handle_send_heart(device: ADBDevice) -> None:
 def _handle_network_error(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: network error")
     dx, dy = _jitter()
-    device.tap(1280 + dx, 920 + dy)
+    device.tap(1280 + dx, 916 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
 def _handle_intro_popup(device: ADBDevice) -> None:
@@ -110,6 +111,12 @@ def _handle_notice_popup(device: ADBDevice) -> None:
     print(f"[{device.name}] scene: notice popup")
     dx, dy = _jitter()
     device.tap(2250 + dx, 150 + dy)
+    time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
+
+def _handle_event_popup(device: ADBDevice) -> None:
+    print(f"[{device.name}] scene: event popup")
+    dx, dy = _jitter()
+    device.tap(2250 + dx, 110 + dy)
     time.sleep(np.clip(random.gauss(0.1, 0.05), 0, 1))
 
 def _handle_fortune_cookie(device: ADBDevice) -> None:
@@ -187,6 +194,13 @@ SCENES: list[SceneDef] = [
         handler=_handle_attendance
     ),
     SceneDef(
+        image=SCENE_EVENT_POPUP,
+        regions=[
+            (0.025, 0.13, 0.85, 0.91),  # 우측 상단 원형 X 버튼
+        ],
+        handler=_handle_event_popup,
+    ),
+    SceneDef(
         image=SCENE_INTRO_POPUP,
         regions=[
             (0.04, 0.13, 0.85, 0.9),
@@ -252,7 +266,7 @@ SCENES: list[SceneDef] = [
     SceneDef(
         image=SCENE_LOBBY,
         regions=[
-            (0.71, 0.95, 0.6, 0.9),  # 우측 하단 "게임시작" 버튼
+            (0.83, 0.95, 0.6, 0.9),  # 우측 하단 "게임시작" 버튼 (동적 탭 제외)
         ],
         handler=_handle_lobby,
     ),
@@ -277,10 +291,10 @@ def run_scenario_loop(device: ADBDevice, poll_interval: float = 1.0) -> None:
     print(f"[{device.name}] start loop")
     load_templates()
     while device.is_connected():
-        screen_gray = cv2.cvtColor(device.screenshot(), cv2.COLOR_BGR2GRAY)
+        screen = cv2.cvtColor(device.screenshot(), cv2.COLOR_BGR2GRAY)
         best_score, best_scene = -1.0, None
         for scene in SCENES:
-            score = device.score_regions(screen_gray, scene.template_gray, scene.regions, scene.threshold)
+            score = device.score_regions(screen, scene.template, scene.regions, scene.threshold)
             if score > best_score:
                 best_score, best_scene = score, scene
         if best_scene:
